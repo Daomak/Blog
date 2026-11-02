@@ -1,0 +1,350 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>新代系统RTCP五轴调试教程 | Daomak - Blog</title><meta name="author" content="Daomak"><meta name="copyright" content="Daomak"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="新代数控系统五轴机床刀尖点跟随功能完整实操调试步骤，包含参数设置、回转中心标定、对刀、精度校验与报警处理   准备工具千分尺、50×50毫米铝件试料、分中棒、8毫米或10毫米铣刀、基准刀具（根据实际工况选用） 调试前请下载对应的五轴调试功能包。 功能包下载 蓝奏云  硬件安装与精度要求 AB型转台：第一旋转轴与X轴保持平行 AC型转台：第一旋转轴与Y轴保持平行 转台工作台平面平面度误差控制在±0">
+<meta property="og:type" content="article">
+<meta property="og:title" content="新代系统RTCP五轴调试教程">
+<meta property="og:url" content="https://www.daomak.com/posts/SYNTEC-5axis-CT.html">
+<meta property="og:site_name" content="Daomak - Blog">
+<meta property="og:description" content="新代数控系统五轴机床刀尖点跟随功能完整实操调试步骤，包含参数设置、回转中心标定、对刀、精度校验与报警处理   准备工具千分尺、50×50毫米铝件试料、分中棒、8毫米或10毫米铣刀、基准刀具（根据实际工况选用） 调试前请下载对应的五轴调试功能包。 功能包下载 蓝奏云  硬件安装与精度要求 AB型转台：第一旋转轴与X轴保持平行 AC型转台：第一旋转轴与Y轴保持平行 转台工作台平面平面度误差控制在±0">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://pic1.imgdb.cn/i/034qdtNCm4p6J3W4cLtdqw.webp">
+<meta property="article:published_time" content="2025-08-05T09:41:59.000Z">
+<meta property="article:modified_time" content="2026-11-02T14:28:58.924Z">
+<meta property="article:author" content="Daomak">
+<meta property="article:tag" content="CNC">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://pic1.imgdb.cn/i/034qdtNCm4p6J3W4cLtdqw.webp"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "新代系统RTCP五轴调试教程",
+  "url": "https://www.daomak.com/posts/SYNTEC-5axis-CT.html",
+  "image": "https://pic1.imgdb.cn/i/034qdtNCm4p6J3W4cLtdqw.webp",
+  "datePublished": "2025-08-05T09:41:59.000Z",
+  "dateModified": "2026-11-02T14:28:58.924Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Daomak",
+      "url": "https://www.daomak.com/"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://www.daomak.com/posts/SYNTEC-5axis-CT.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.json","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"未找到符合您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: {"defaultEncoding":2,"translateDelay":0,"msgToTraditionalChinese":"繁","msgToSimplifiedChinese":"简"},
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":true},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: true,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '新代系统RTCP五轴调试教程',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 7.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/favicon.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">3</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">3</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">3</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-list"></i><span> 文章</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></li><li><a class="site-page child" href="/tags/"><i class="fa-fw fas fa-tag"></i><span> 标签</span></a></li><li><a class="site-page child" href="/archives/"><i class="fa-fw fas fa-book"></i><span> 归档</span></a></li></ul></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-list"></i><span> 菜单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/nas/"><i class="fa-fw fas fa-server"></i><span> NAS</span></a></li></ul></div><div class="menus_item"><span class="site-page group"><i class="fa-fw far fa-user"></i><span> 我的</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/about/"><i class="fa-fw far fa-registered"></i><span> 关于</span></a></li><li><a class="site-page child" href="/link/"><i class="fa-fw fas fa-link"></i><span> 技术支持</span></a></li></ul></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Daomak - Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">新代系统RTCP五轴调试教程</span></a></span><div id="menus"><div id="search-button"><span class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></span></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-list"></i><span> 文章</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></li><li><a class="site-page child" href="/tags/"><i class="fa-fw fas fa-tag"></i><span> 标签</span></a></li><li><a class="site-page child" href="/archives/"><i class="fa-fw fas fa-book"></i><span> 归档</span></a></li></ul></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-list"></i><span> 菜单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/nas/"><i class="fa-fw fas fa-server"></i><span> NAS</span></a></li></ul></div><div class="menus_item"><span class="site-page group"><i class="fa-fw far fa-user"></i><span> 我的</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/about/"><i class="fa-fw far fa-registered"></i><span> 关于</span></a></li><li><a class="site-page child" href="/link/"><i class="fa-fw fas fa-link"></i><span> 技术支持</span></a></li></ul></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">新代系统RTCP五轴调试教程</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2025-08-05T09:41:59.000Z" title="发表于 2025-08-05 17:41:59">2025-08-05</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-11-02T14:28:58.924Z" title="更新于 2026-11-02 22:28:58">2026-11-02</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%B7%A5%E4%BD%9C%E7%AC%94%E8%AE%B0/">工作笔记</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">1.9k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>5分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div><article class="container post-content" id="article-container"><div id="post-outdate-notice" data="{&quot;limitDay&quot;:365,&quot;messagePrev&quot;:&quot;已经过了&quot;,&quot;messageNext&quot;:&quot;天自上次更新，文章内容可能已过时。&quot;,&quot;postUpdate&quot;:&quot;2026-11-02 22:28:58&quot;}" hidden></div><blockquote>
+<p>新代数控系统五轴机床刀尖点跟随功能完整实操调试步骤，包含参数设置、回转中心标定、对刀、精度校验与报警处理</p>
+</blockquote>
+<p><img src="https://pic1.imgdb.cn/i/034qdtNCm4p6J3W4cLtdqw.webp" alt="687d07c458cb8da5c8c8aa53.webp"></p>
+<h2 id="准备工具"><a href="#准备工具" class="headerlink" title="准备工具"></a>准备工具</h2><p>千分尺、50×50毫米铝件试料、分中棒、8毫米或10毫米铣刀、基准刀具（根据实际工况选用）</p>
+<p>调试前请下载对应的五轴调试功能包。</p>
+<h2 id="功能包下载"><a href="#功能包下载" class="headerlink" title="功能包下载"></a>功能包下载</h2><ul>
+<li><a target="_blank" rel="noopener" href="https://hungdao.lanzoum.com/b0raij2qd">蓝奏云</a></li>
+</ul>
+<h2 id="硬件安装与精度要求"><a href="#硬件安装与精度要求" class="headerlink" title="硬件安装与精度要求"></a>硬件安装与精度要求</h2><ul>
+<li>AB型转台：第一旋转轴与X轴保持平行</li>
+<li>AC型转台：第一旋转轴与Y轴保持平行</li>
+<li>转台工作台平面平面度误差控制在±0.005毫米以内</li>
+<li>各旋转轴反向间隙控制在±0.005毫米以内</li>
+<li>第一旋转轴旋转至+90°、-90°位置时，与对应机械轴平行度误差不超过±0.002毫米</li>
+</ul>
+<h2 id="系统语言设置"><a href="#系统语言设置" class="headerlink" title="系统语言设置"></a>系统语言设置</h2><table>
+<thead>
+<tr>
+<th>参数编号</th>
+<th>设置数值</th>
+<th>参数说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>3028</td>
+<td>119</td>
+<td>设置系统界面为简体中文</td>
+</tr>
+</tbody></table>
+<h2 id="五轴机构基础参数设置"><a href="#五轴机构基础参数设置" class="headerlink" title="五轴机构基础参数设置"></a>五轴机构基础参数设置</h2><table>
+<thead>
+<tr>
+<th>参数编号</th>
+<th>设置数值</th>
+<th>参数说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>3001</td>
+<td>2</td>
+<td>五轴机构类型：2&#x3D;双旋转工作台；0&#x3D;非五轴设备；1&#x3D;双旋转主轴；3&#x3D;主轴‑工作台混合型；4&#x3D;单旋转主轴；5&#x3D;单旋转工作台</td>
+</tr>
+<tr>
+<td>3002</td>
+<td>3</td>
+<td>刀具初始朝向：0&#x3D;未设置；1&#x3D;X轴正方向；2&#x3D;Y轴正方向；3&#x3D;Z轴正方向</td>
+</tr>
+<tr>
+<td>3005</td>
+<td>1</td>
+<td>第一旋转轴旋转基准：0&#x3D;未设置；1&#x3D;围绕X轴旋转；2&#x3D;围绕Y轴旋转；3&#x3D;围绕Z轴旋转</td>
+</tr>
+<tr>
+<td>3006</td>
+<td>3</td>
+<td>第二旋转轴旋转基准：0&#x3D;未设置；1&#x3D;围绕X轴旋转；2&#x3D;围绕Y轴旋转；3&#x3D;围绕Z轴旋转</td>
+</tr>
+<tr>
+<td>3007</td>
+<td>2</td>
+<td>第一旋转轴旋转判定法则：0&#x3D;未设置；1&#x3D;右手定则；2&#x3D;左手定则</td>
+</tr>
+<tr>
+<td>3008</td>
+<td>2</td>
+<td>第二旋转轴旋转判定法则：0&#x3D;未设置；1&#x3D;右手定则；2&#x3D;左手定则</td>
+</tr>
+<tr>
+<td>3009</td>
+<td>250000</td>
+<td>第一旋转轴允许旋转角度起始位置</td>
+</tr>
+<tr>
+<td>3010</td>
+<td>110000</td>
+<td>第一旋转轴允许旋转角度终止位置</td>
+</tr>
+<tr>
+<td>3813</td>
+<td>20000</td>
+<td>预留参数</td>
+</tr>
+</tbody></table>
+<h2 id="五轴机构几何参数与回转中心标定"><a href="#五轴机构几何参数与回转中心标定" class="headerlink" title="五轴机构几何参数与回转中心标定"></a>五轴机构几何参数与回转中心标定</h2><h3 id="机构几何参数计算公式"><a href="#机构几何参数计算公式" class="headerlink" title="机构几何参数计算公式"></a>机构几何参数计算公式</h3><table>
+<thead>
+<tr>
+<th>参数编号</th>
+<th>计算公式</th>
+<th>参数说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>3034</td>
+<td>(X1+X2)÷2</td>
+<td>第一旋转回转中心X轴坐标</td>
+</tr>
+<tr>
+<td>3035</td>
+<td>(Y1+Y2)÷2</td>
+<td>第一旋转回转中心Y轴坐标</td>
+</tr>
+<tr>
+<td>3036</td>
+<td>Z1+Z2</td>
+<td>主轴刀具端面到转台工作台面距离Z1，加上工作台面到第一旋转回转中心距离Z2</td>
+</tr>
+</tbody></table>
+<h4 id="参数3034、3035（回转中心XY坐标）两种设置方法"><a href="#参数3034、3035（回转中心XY坐标）两种设置方法" class="headerlink" title="参数3034、3035（回转中心XY坐标）两种设置方法"></a>参数3034、3035（回转中心XY坐标）两种设置方法</h4><ol>
+<li>方法一：使用分中棒，利用系统分中功能，对转台中心内孔进行分中测量，将得到的XY机械坐标直接填入参数3034、3035。</li>
+<li>方法二：选用方形工件，依次将C轴旋转到0°、90°、180°、270°四个角度，对工件同一个立面做分中检测，计算得到旋转中心XY坐标，写入参数3034、3035。</li>
+</ol>
+<h4 id="参数3036（回转中心Z方向距离）"><a href="#参数3036（回转中心Z方向距离）" class="headerlink" title="参数3036（回转中心Z方向距离）"></a>参数3036（回转中心Z方向距离）</h4><ul>
+<li>Z1：主轴刀具端面到转台工作台面距离，测量时第一旋转轴需要回到机械原点。</li>
+<li>Z2：使用分中棒，分别将第一旋转轴转到90°与-90°位置测量；计算公式：<code>(Y1+Y2-分中棒直径)÷2</code>，计算得到工作台面距离第一旋转回转中心的高度。</li>
+</ul>
+<h2 id="刀具对刀基准设置"><a href="#刀具对刀基准设置" class="headerlink" title="刀具对刀基准设置"></a>刀具对刀基准设置</h2><p>系统对刀模式需要修改为<strong>4号五轴专用量刀模式</strong>。</p>
+<h3 id="配备自动对刀仪的设备"><a href="#配备自动对刀仪的设备" class="headerlink" title="配备自动对刀仪的设备"></a>配备自动对刀仪的设备</h3><p>将主轴刀具端面接触到对刀仪感应面，执行对刀仪教导操作，完成自动对刀。</p>
+<h3 id="无自动对刀仪设备"><a href="#无自动对刀仪设备" class="headerlink" title="无自动对刀仪设备"></a>无自动对刀仪设备</h3><p>准备一块厚度大于25毫米的方形或者圆形坯料，将坯料上表面铣削平整。采用滚刀接触法，确认基准刀具到工件表面距离，把当前Z轴机械坐标记录到临时坐标系。<br>再使用加工刀具以滚刀方式接触工件表面，读取Z轴机械坐标，减去刚才记录基准刀Z坐标，将差值填写进加工刀具长度补偿表。</p>
+<h3 id="实操对刀操作"><a href="#实操对刀操作" class="headerlink" title="实操对刀操作"></a>实操对刀操作</h3><ol>
+<li>将系统对刀模式设置为4号五轴量刀模式。</li>
+<li>有对刀仪：刀具执行自动对刀，采用滚刀方式接触工件表面，记录Z轴机械坐标，再减去该刀具刀长补偿值。</li>
+<li>无对刀仪：滚刀法测出加工刀接触工件表面的Z坐标，减去基准刀Z坐标，得到刀长补偿数值，填入刀具补偿列表。</li>
+</ol>
+<h2 id="加工精度验证流程"><a href="#加工精度验证流程" class="headerlink" title="加工精度验证流程"></a>加工精度验证流程</h2><h3 id="三轴铣削方形基准件"><a href="#三轴铣削方形基准件" class="headerlink" title="三轴铣削方形基准件"></a>三轴铣削方形基准件</h3><blockquote>
+<p>参数释义</p>
+</blockquote>
+<ul>
+<li>下层方形尺寸：下层大方形，尺寸需要比上层小方形至少大2毫米；如果使用上大下小结构寻边器，下层方形尺寸需要放大4毫米以上，防止测量发生干涉。</li>
+<li>上层方形尺寸：上层小方形工件尺寸。</li>
+<li>毛坯外形尺寸：毛坯可以选用圆棒料或者方块料；圆棒填写直径，方块填写对角线长度，毛坯尺寸必须大于下层大方形尺寸。</li>
+<li>刀具重叠比例：刀尖切削时，刀路重叠宽度占刀具直径的百分比。</li>
+<li>进给速度：粗加工、精加工分别设置进给速率。</li>
+<li>主轴转速：默认推荐6000转每分钟。</li>
+<li>每层切削深度：精加工预留加工余量。</li>
+</ul>
+<h3 id="五轴铣削精度校验"><a href="#五轴铣削精度校验" class="headerlink" title="五轴铣削精度校验"></a>五轴铣削精度校验</h3><ol>
+<li>执行五轴粗加工。</li>
+<li>执行五轴精加工。</li>
+<li>使用量具测量加工完成工件实际尺寸。</li>
+<li>填写测量工具实际直径（常用分中棒为4毫米或者8毫米）。</li>
+<li>参照操作图示，使用分中棒依次触碰PX1<del>PX4、PY1</del>PY4共8个点位，点击记录按键，保存触碰点位对应的机械坐标。</li>
+<li>使用千分表触碰PZ1、PZ2点位，记录Z轴机械坐标。</li>
+<li>全部点位采集完毕，点击4号按键计算加工结果。</li>
+<li>优先核对上层小方形计算尺寸和千分尺实测尺寸是否一致；上层方形为三轴加工生成，数值偏差过大，代表分中测量操作存在失误，需要重新测量采集点位；数据吻合后，继续查看分析页面给出的修正参数建议。</li>
+<li>套用系统给出的修正参数，将加工理论尺寸缩小0.05毫米，再次执行三轴、五轴铣削，校验成品加工精度。</li>
+</ol>
+<h3 id="系统报警处理对照表"><a href="#系统报警处理对照表" class="headerlink" title="系统报警处理对照表"></a>系统报警处理对照表</h3><table>
+<thead>
+<tr>
+<th>报警编号</th>
+<th>报警文字提示</th>
+<th>故障处理方式</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>10001</td>
+<td>上层、下层方形尺寸设置错误</td>
+<td>检查工件参数，下层方形尺寸必须大于上层方形尺寸</td>
+</tr>
+<tr>
+<td>10002</td>
+<td>毛坯外形尺寸设置错误</td>
+<td>检查工件参数，毛坯尺寸必须大于下层方形尺寸</td>
+</tr>
+<tr>
+<td>10003</td>
+<td>刀路重叠比例设置错误</td>
+<td>工件参数中，重叠比例取值范围0‑100之间</td>
+</tr>
+<tr>
+<td>10004</td>
+<td>刀具直径设置错误</td>
+<td>核对当前刀号刀具补偿内填写的刀具直径</td>
+</tr>
+<tr>
+<td>10005</td>
+<td>五轴机构参数设置错误</td>
+<td>逐项核对全部五轴机构参数配置</td>
+</tr>
+</tbody></table>
+<h2 id="出厂验收标准"><a href="#出厂验收标准" class="headerlink" title="出厂验收标准"></a>出厂验收标准</h2><ol>
+<li>完成标准S件试切加工。</li>
+<li>检测工件加工尺寸精度以及表面加工光洁度。</li>
+</ol>
+<blockquote>
+<p>本文仅供学习参考，实际调试请结合机床机械状态。</p>
+</blockquote>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://www.daomak.com/">Daomak</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://www.daomak.com/posts/SYNTEC-5axis-CT.html">https://www.daomak.com/posts/SYNTEC-5axis-CT.html</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://www.Daomak.com" target="_blank">Daomak - Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/CNC/">CNC</a></div><div class="post-share"><div class="social-share" data-image="https://pic1.imgdb.cn/i/034qdtNCm4p6J3W4cLtdqw.webp" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/posts/Hexo.html" title="Hexo 使用历程"><img class="cover" src="https://pic1.imgdb.cn/i/034qdqXgHu2lPGl8noUj94.webp" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">Hexo 使用历程</div></div><div class="info-2"><div class="info-item-1"> Hexo 与 Butterfly主题部署到 Github 的使用历程记录   配置环境安装工具 Node.js Git Visual Studio Code  一键备份Hexo与Butterfly主题文件工具  设置国内镜像源 查询当前使用镜像源  1npm get registry   淘宝  1npm config set registry https://registry.npmmirror.com/   腾讯  1npm config set registry https://mirrors.cloud.tencent.com/npm/   CNPM  1npm config set registry https://r.cnpmjs.org/   还原官方镜像源  1npm config set registry https://registry.npmjs.org/   Github 配置Git 配置 设置用户名与邮箱  12git config --global user.name &quot;GitHub 用户名&quot;git config...</div></div></div></a></nav></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/favicon.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Daomak</div><div class="author-info-description">攒下沿途所得，留予同路人参考</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">3</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">3</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">3</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Daomak"><i class="fab fa-github"></i><span>Github</span></a></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%87%86%E5%A4%87%E5%B7%A5%E5%85%B7"><span class="toc-number">1.</span> <span class="toc-text">准备工具</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8A%9F%E8%83%BD%E5%8C%85%E4%B8%8B%E8%BD%BD"><span class="toc-number">2.</span> <span class="toc-text">功能包下载</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%A1%AC%E4%BB%B6%E5%AE%89%E8%A3%85%E4%B8%8E%E7%B2%BE%E5%BA%A6%E8%A6%81%E6%B1%82"><span class="toc-number">3.</span> <span class="toc-text">硬件安装与精度要求</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%B3%BB%E7%BB%9F%E8%AF%AD%E8%A8%80%E8%AE%BE%E7%BD%AE"><span class="toc-number">4.</span> <span class="toc-text">系统语言设置</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E8%BD%B4%E6%9C%BA%E6%9E%84%E5%9F%BA%E7%A1%80%E5%8F%82%E6%95%B0%E8%AE%BE%E7%BD%AE"><span class="toc-number">5.</span> <span class="toc-text">五轴机构基础参数设置</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E8%BD%B4%E6%9C%BA%E6%9E%84%E5%87%A0%E4%BD%95%E5%8F%82%E6%95%B0%E4%B8%8E%E5%9B%9E%E8%BD%AC%E4%B8%AD%E5%BF%83%E6%A0%87%E5%AE%9A"><span class="toc-number">6.</span> <span class="toc-text">五轴机构几何参数与回转中心标定</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9C%BA%E6%9E%84%E5%87%A0%E4%BD%95%E5%8F%82%E6%95%B0%E8%AE%A1%E7%AE%97%E5%85%AC%E5%BC%8F"><span class="toc-number">6.1.</span> <span class="toc-text">机构几何参数计算公式</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%8F%82%E6%95%B03034%E3%80%813035%EF%BC%88%E5%9B%9E%E8%BD%AC%E4%B8%AD%E5%BF%83XY%E5%9D%90%E6%A0%87%EF%BC%89%E4%B8%A4%E7%A7%8D%E8%AE%BE%E7%BD%AE%E6%96%B9%E6%B3%95"><span class="toc-number">6.1.1.</span> <span class="toc-text">参数3034、3035（回转中心XY坐标）两种设置方法</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%8F%82%E6%95%B03036%EF%BC%88%E5%9B%9E%E8%BD%AC%E4%B8%AD%E5%BF%83Z%E6%96%B9%E5%90%91%E8%B7%9D%E7%A6%BB%EF%BC%89"><span class="toc-number">6.1.2.</span> <span class="toc-text">参数3036（回转中心Z方向距离）</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%88%80%E5%85%B7%E5%AF%B9%E5%88%80%E5%9F%BA%E5%87%86%E8%AE%BE%E7%BD%AE"><span class="toc-number">7.</span> <span class="toc-text">刀具对刀基准设置</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%85%8D%E5%A4%87%E8%87%AA%E5%8A%A8%E5%AF%B9%E5%88%80%E4%BB%AA%E7%9A%84%E8%AE%BE%E5%A4%87"><span class="toc-number">7.1.</span> <span class="toc-text">配备自动对刀仪的设备</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%97%A0%E8%87%AA%E5%8A%A8%E5%AF%B9%E5%88%80%E4%BB%AA%E8%AE%BE%E5%A4%87"><span class="toc-number">7.2.</span> <span class="toc-text">无自动对刀仪设备</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%AE%9E%E6%93%8D%E5%AF%B9%E5%88%80%E6%93%8D%E4%BD%9C"><span class="toc-number">7.3.</span> <span class="toc-text">实操对刀操作</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8A%A0%E5%B7%A5%E7%B2%BE%E5%BA%A6%E9%AA%8C%E8%AF%81%E6%B5%81%E7%A8%8B"><span class="toc-number">8.</span> <span class="toc-text">加工精度验证流程</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%89%E8%BD%B4%E9%93%A3%E5%89%8A%E6%96%B9%E5%BD%A2%E5%9F%BA%E5%87%86%E4%BB%B6"><span class="toc-number">8.1.</span> <span class="toc-text">三轴铣削方形基准件</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BA%94%E8%BD%B4%E9%93%A3%E5%89%8A%E7%B2%BE%E5%BA%A6%E6%A0%A1%E9%AA%8C"><span class="toc-number">8.2.</span> <span class="toc-text">五轴铣削精度校验</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%B3%BB%E7%BB%9F%E6%8A%A5%E8%AD%A6%E5%A4%84%E7%90%86%E5%AF%B9%E7%85%A7%E8%A1%A8"><span class="toc-number">8.3.</span> <span class="toc-text">系统报警处理对照表</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%87%BA%E5%8E%82%E9%AA%8C%E6%94%B6%E6%A0%87%E5%87%86"><span class="toc-number">9.</span> <span class="toc-text">出厂验收标准</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/posts/SYNTEC-5axis-CT.html" title="新代系统RTCP五轴调试教程"><img src="https://pic1.imgdb.cn/i/034qdtNCm4p6J3W4cLtdqw.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="新代系统RTCP五轴调试教程"/></a><div class="content"><a class="title" href="/posts/SYNTEC-5axis-CT.html" title="新代系统RTCP五轴调试教程">新代系统RTCP五轴调试教程</a><time datetime="2025-08-05T09:41:59.000Z" title="发表于 2025-08-05 17:41:59">2025-08-05</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/Hexo.html" title="Hexo 使用历程"><img src="https://pic1.imgdb.cn/i/034qdqXgHu2lPGl8noUj94.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Hexo 使用历程"/></a><div class="content"><a class="title" href="/posts/Hexo.html" title="Hexo 使用历程">Hexo 使用历程</a><time datetime="2025-07-20T15:02:18.000Z" title="发表于 2025-07-20 23:02:18">2025-07-20</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/NERT.html" title="NERT 三菱传输软件与修复工具"><img src="https://pic1.imgdb.cn/item/688333e258cb8da5c8db6cf6.png" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="NERT 三菱传输软件与修复工具"/></a><div class="content"><a class="title" href="/posts/NERT.html" title="NERT 三菱传输软件与修复工具">NERT 三菱传输软件与修复工具</a><time datetime="2025-03-18T12:05:04.000Z" title="发表于 2025-03-18 20:05:04">2025-03-18</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2019 - 2026 By Daomak</div><div class="footer_custom_text"><span id="runTime"></span><script>let st=new Date("2019/01/01 00:00:00").getTime();function f(n){return n<10?"0"+n:n;}setInterval(function(){let t=Date.now()-st;let d=Math.floor(t/86400000);let h=Math.floor((t%86400000)/3600000);let m=Math.floor((t%3600000)/60000);let s=Math.floor((t%60000)/1000);document.getElementById("runTime").innerText="本网站已运行 "+d+"天"+h+"小时"+f(m)+"分"+f(s)+"秒";},1000);</script></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="translateLink" type="button" title="简繁转换">繁</button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="/js/tw_cn.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="text-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div></body></html>
