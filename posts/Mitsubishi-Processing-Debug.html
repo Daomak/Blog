@@ -1,0 +1,734 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>Mitsubishi-processing-debug | Daomak - Blog</title><meta name="author" content="Daomak"><meta name="copyright" content="Daomak"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="本文整理三菱M70&#x2F;M80&#x2F;M800系列纯加工调试参数优化切削品质、伺服响应、轮廓精度、振动抑制、刚性攻丝、误差补偿相关参数。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Mitsubishi-processing-debug">
+<meta property="og:url" content="https://www.daomak.com/posts/Mitsubishi-Processing-Debug.html">
+<meta property="og:site_name" content="Daomak - Blog">
+<meta property="og:description" content="本文整理三菱M70&#x2F;M80&#x2F;M800系列纯加工调试参数优化切削品质、伺服响应、轮廓精度、振动抑制、刚性攻丝、误差补偿相关参数。">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://pic1.imgdb.cn/i/034rVxaad0M3ObkFgZsS4i.webp">
+<meta property="article:published_time" content="2026-11-04T02:51:04.000Z">
+<meta property="article:modified_time" content="2026-11-04T03:11:27.246Z">
+<meta property="article:author" content="Daomak">
+<meta property="article:tag" content="三菱系统">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://pic1.imgdb.cn/i/034rVxaad0M3ObkFgZsS4i.webp"><script type="application/ld+json">{
+  "@context": "https://schema.org",
+  "@type": "BlogPosting",
+  "headline": "Mitsubishi-processing-debug",
+  "url": "https://www.daomak.com/posts/Mitsubishi-Processing-Debug.html",
+  "image": "https://pic1.imgdb.cn/i/034rVxaad0M3ObkFgZsS4i.webp",
+  "datePublished": "2026-11-04T02:51:04.000Z",
+  "dateModified": "2026-11-04T03:11:27.246Z",
+  "author": [
+    {
+      "@type": "Person",
+      "name": "Daomak",
+      "url": "https://www.daomak.com/"
+    }
+  ]
+}</script><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://www.daomak.com/posts/Mitsubishi-Processing-Debug.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>
+    (() => {
+      
+    const saveToLocal = {
+      set: (key, value, ttl) => {
+        if (!ttl) return
+        const expiry = Date.now() + ttl * 86400000
+        localStorage.setItem(key, JSON.stringify({ value, expiry }))
+      },
+      get: key => {
+        const itemStr = localStorage.getItem(key)
+        if (!itemStr) return undefined
+        const { value, expiry } = JSON.parse(itemStr)
+        if (Date.now() > expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return value
+      }
+    }
+
+    window.btf = {
+      saveToLocal,
+      getScript: (url, attr = {}) => new Promise((resolve, reject) => {
+        const script = document.createElement('script')
+        script.src = url
+        script.async = true
+        Object.entries(attr).forEach(([key, val]) => script.setAttribute(key, val))
+        script.onload = script.onreadystatechange = () => {
+          if (!script.readyState || /loaded|complete/.test(script.readyState)) resolve()
+        }
+        script.onerror = reject
+        document.head.appendChild(script)
+      }),
+      getCSS: (url, id) => new Promise((resolve, reject) => {
+        const link = document.createElement('link')
+        link.rel = 'stylesheet'
+        link.href = url
+        if (id) link.id = id
+        link.onload = link.onreadystatechange = () => {
+          if (!link.readyState || /loaded|complete/.test(link.readyState)) resolve()
+        }
+        link.onerror = reject
+        document.head.appendChild(link)
+      }),
+      addGlobalFn: (key, fn, name = false, parent = window) => {
+        if (!false && key.startsWith('pjax')) return
+        const globalFn = parent.globalFn || {}
+        globalFn[key] = globalFn[key] || {}
+        globalFn[key][name || Object.keys(globalFn[key]).length] = fn
+        parent.globalFn = globalFn
+      }
+    }
+  
+      
+      const activateDarkMode = () => {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      const activateLightMode = () => {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+
+      btf.activateDarkMode = activateDarkMode
+      btf.activateLightMode = activateLightMode
+
+      const theme = saveToLocal.get('theme')
+    
+          theme === 'dark' ? activateDarkMode() : theme === 'light' ? activateLightMode() : null
+        
+      
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        document.documentElement.classList.toggle('hide-aside', asideStatus === 'hide')
+      }
+    
+      
+    const detectApple = () => {
+      if (/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)) {
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+  
+    })()
+  </script><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: {"path":"/search.json","preload":false,"top_n_per_article":1,"unescape":false,"languages":{"hits_empty":"未找到符合您查询的内容：${query}","hits_stats":"共找到 ${hits} 篇文章"}},
+  translate: {"defaultEncoding":2,"translateDelay":0,"msgToTraditionalChinese":"繁","msgToSimplifiedChinese":"简"},
+  highlight: {"plugin":"highlight.js","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false,"highlightFullpage":false,"highlightMacStyle":true},
+  copy: {
+    success: '复制成功',
+    error: '复制失败',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  infinitegrid: {
+    js: 'https://cdn.jsdelivr.net/npm/@egjs/infinitegrid/dist/infinitegrid.min.js',
+    buttonText: '加载更多'
+  },
+  isPhotoFigcaption: false,
+  islazyloadPlugin: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: true,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: 'Mitsubishi-processing-debug',
+  isHighlightShrink: false,
+  isToc: true,
+  pageType: 'post'
+}</script><meta name="generator" content="Hexo 7.3.0"></head><body><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img text-center"><img src="/img/favicon.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="site-data text-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">6</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">4</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">2</div></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-list"></i><span> 文章</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></li><li><a class="site-page child" href="/tags/"><i class="fa-fw fas fa-tag"></i><span> 标签</span></a></li><li><a class="site-page child" href="/archives/"><i class="fa-fw fas fa-book"></i><span> 归档</span></a></li></ul></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-list"></i><span> 菜单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/nas/"><i class="fa-fw fas fa-server"></i><span> NAS</span></a></li></ul></div><div class="menus_item"><span class="site-page group"><i class="fa-fw far fa-user"></i><span> 我的</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/about/"><i class="fa-fw far fa-registered"></i><span> 关于</span></a></li><li><a class="site-page child" href="/link/"><i class="fa-fw fas fa-link"></i><span> 技术支持</span></a></li></ul></div></div></div></div><div class="post" id="body-wrap"><header class="not-top-img" id="page-header"><nav id="nav"><span id="blog-info"><a class="nav-site-title" href="/"><span class="site-name">Daomak - Blog</span></a><a class="nav-page-title" href="/"><span class="site-name">Mitsubishi-processing-debug</span></a></span><div id="menus"><div id="search-button"><span class="site-page social-icon search"><i class="fas fa-search fa-fw"></i><span> 搜索</span></span></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 首页</span></a></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-list"></i><span> 文章</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 分类</span></a></li><li><a class="site-page child" href="/tags/"><i class="fa-fw fas fa-tag"></i><span> 标签</span></a></li><li><a class="site-page child" href="/archives/"><i class="fa-fw fas fa-book"></i><span> 归档</span></a></li></ul></div><div class="menus_item"><span class="site-page group"><i class="fa-fw fas fa-list"></i><span> 菜单</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/nas/"><i class="fa-fw fas fa-server"></i><span> NAS</span></a></li></ul></div><div class="menus_item"><span class="site-page group"><i class="fa-fw far fa-user"></i><span> 我的</span><i class="fas fa-chevron-down"></i></span><ul class="menus_item_child"><li><a class="site-page child" href="/about/"><i class="fa-fw far fa-registered"></i><span> 关于</span></a></li><li><a class="site-page child" href="/link/"><i class="fa-fw fas fa-link"></i><span> 技术支持</span></a></li></ul></div></div><div id="toggle-menu"><span class="site-page"><i class="fas fa-bars fa-fw"></i></span></div></div></nav></header><main class="layout" id="content-inner"><div id="post"><div id="post-info"><h1 class="post-title">Mitsubishi-processing-debug</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2026-11-04T02:51:04.000Z" title="发表于 2026-11-04 10:51:04">2026-11-04</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2026-11-04T03:11:27.246Z" title="更新于 2026-11-04 11:11:27">2026-11-04</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/%E5%B7%A5%E4%BD%9C%E7%AC%94%E8%AE%B0/">工作笔记</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-wordcount"><i class="far fa-file-word fa-fw post-meta-icon"></i><span class="post-meta-label">总字数:</span><span class="word-count">2.6k</span><span class="post-meta-separator">|</span><i class="far fa-clock fa-fw post-meta-icon"></i><span class="post-meta-label">阅读时长:</span><span>9分钟</span></span><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title=""><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">浏览量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div><article class="container post-content" id="article-container"><div id="post-outdate-notice" data="{&quot;limitDay&quot;:365,&quot;messagePrev&quot;:&quot;已经过了&quot;,&quot;messageNext&quot;:&quot;天自上次更新，文章内容可能已过时。&quot;,&quot;postUpdate&quot;:&quot;2026-11-04 11:11:27&quot;}" hidden></div><p><img src="https://pic1.imgdb.cn/i/034rVxaad0M3ObkFgZsS4i.webp" alt="10e86671a507a3cc.webp"></p>
+<h1 id="三菱M70-M80-M800-加工调试参数完整手册"><a href="#三菱M70-M80-M800-加工调试参数完整手册" class="headerlink" title="三菱M70&#x2F;M80&#x2F;M800 加工调试参数完整手册"></a>三菱M70&#x2F;M80&#x2F;M800 加工调试参数完整手册</h1><blockquote>
+<p>适用：立式加工中心、龙门、雕铣机、模具&#x2F;石墨机<br>资料来源：三菱官方《M800&#x2F;M80 Alarm&#x2F;Parameter Manual》《SERVO ADJUSTMENT MANUAL》、M70&#x2F;M80高精度调整资料、SHG控制技术资料<br>编号差异：M70 主轴参数在 #30xx 段，M80&#x2F;M800 主轴参数在 #13xxx 段；其余加工&#x2F;伺服参数两系兼容<br>安全前提：修改前备份 NC&#x2F;伺服&#x2F;补偿参数；单轴、单变量微调；伺服增益改完必须空载试切</p>
+</blockquote>
+<hr>
+<h2 id="一、伺服环基础参数（振动、圆度、跟随误差核心，单轴独立）"><a href="#一、伺服环基础参数（振动、圆度、跟随误差核心，单轴独立）" class="headerlink" title="一、伺服环基础参数（振动、圆度、跟随误差核心，单轴独立）"></a>一、伺服环基础参数（振动、圆度、跟随误差核心，单轴独立）</h2><blockquote>
+<p>官方高精度调整推荐：<strong>PGN 尽量设 47（最低 38）、前馈 fwd_g 尽量设 45（最低 40）</strong>，在不振范围内越高，相同加工时间尺寸精度越好</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>参数号</th>
+<th>代号</th>
+<th>名称</th>
+<th>标准值&#x2F;参考</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>#2203</td>
+<td>PGN</td>
+<td>位置环增益</td>
+<td>33 &#x2F; 47</td>
+<td>尺寸精度优先设高（47），振动则降到33</td>
+</tr>
+<tr>
+<td>#2204</td>
+<td>PGN2</td>
+<td>位置环增益2</td>
+<td>按比例</td>
+<td>SHG 时与 PGN1、SHGC 按 1:8&#x2F;3:6 设定</td>
+</tr>
+<tr>
+<td>#2205</td>
+<td>VGN</td>
+<td>速度环增益</td>
+<td>按机床</td>
+<td>速度环响应，共振啸叫立即降</td>
+</tr>
+<tr>
+<td>#2206</td>
+<td>VIT</td>
+<td>速度环积分时间</td>
+<td>20~150ms</td>
+<td>消除稳态误差；振动时加大</td>
+</tr>
+<tr>
+<td>#2207</td>
+<td>DIT</td>
+<td>微分时间常数</td>
+<td>0~30ms</td>
+<td>抑制超调，慎用</td>
+</tr>
+<tr>
+<td>#2208</td>
+<td>VIA</td>
+<td>位置环超前补偿</td>
+<td>1364（SHG时1900）</td>
+<td>SHG 高增益化的关键前置参数</td>
+</tr>
+<tr>
+<td>#2010</td>
+<td>fwd_g</td>
+<td>前馈滤波器增益</td>
+<td>40 &#x2F; 45</td>
+<td>前馈越高跟随误差越小、圆弧越圆；过冲则降</td>
+</tr>
+<tr>
+<td>#2237</td>
+<td>SV037 JL</td>
+<td>负载惯量比</td>
+<td>150~600%</td>
+<td>(Jm+Jl)&#x2F;Jm×100%，干扰观测器前置条件，M80可自动推定</td>
+</tr>
+<tr>
+<td>#2215</td>
+<td>SV015 FFC</td>
+<td>加减速前馈增益</td>
+<td>0（SHG时100）</td>
+<td>加减速段前馈，改善加减速轮廓偏移</td>
+</tr>
+</tbody></table>
+<h2 id="二、干扰观测器-扰动补偿"><a href="#二、干扰观测器-扰动补偿" class="headerlink" title="二、干扰观测器 &#x2F; 扰动补偿"></a>二、干扰观测器 &#x2F; 扰动补偿</h2><blockquote>
+<p>官方《SERVO ADJUSTMENT MANUAL》确认：干扰观测器对 45° 附近圆度、位置偏差波形振动、lost motion 补偿碰撞声均有改善；先设好 #2237 惯量比再调本组</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>参数号</th>
+<th>代号</th>
+<th>名称</th>
+<th>标准&#x2F;范围</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>#2243</td>
+<td>SV043 OBS1</td>
+<td>观测器滤波频率</td>
+<td>300Hz（200~300）</td>
+<td>出现振动每次降100；降低后补偿效果变弱</td>
+</tr>
+<tr>
+<td>#2244</td>
+<td>SV044 OBS2</td>
+<td>观测器增益</td>
+<td>100~300%</td>
+<td>标准100起步，振动则降低</td>
+</tr>
+<tr>
+<td>#2216</td>
+<td>SV016 LMC1</td>
+<td>Lost motion补偿（+方向）</td>
+<td>0~100</td>
+<td>换向补偿，与SV041配合分方向</td>
+</tr>
+<tr>
+<td>#2241</td>
+<td>SV041 LMC2</td>
+<td>Lost motion补偿（方向依赖）</td>
+<td>0~100</td>
+<td>设0时用SV016双向；调OBS后需重调lost motion</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>官方提示：改变 SV043&#x2F;SV044 后，最优 lost motion 量（SV016&#x2F;SV041）也随之改变，必须重新调整；观测器对部分机械特性易引发共振，慎用于刚性差的机床。</p>
+</blockquote>
+<h2 id="三、SHG-平滑高增益控制（M80-M800-功能）"><a href="#三、SHG-平滑高增益控制（M80-M800-功能）" class="headerlink" title="三、SHG 平滑高增益控制（M80&#x2F;M800 功能）"></a>三、SHG 平滑高增益控制（M80&#x2F;M800 功能）</h2><blockquote>
+<p>SHG 通过更稳定补偿伺服位置环延迟实现高增益化（同样 PGN1 下实际位置环增益约 2 倍），整定时间更短、加减速响应更平滑</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>参数号</th>
+<th>名称</th>
+<th>设定</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>#2257</td>
+<td>SV057 SHGC</td>
+<td>按比例</td>
+<td>与 PGN1(#2203)、PGN2(#2204) 按 <strong>1 : 8&#x2F;3 : 6</strong> 设定</td>
+</tr>
+<tr>
+<td>#2208</td>
+<td>VIA</td>
+<td>1900</td>
+<td>SHG 时位置环超前补偿标准值</td>
+</tr>
+<tr>
+<td>#2215</td>
+<td>FFC</td>
+<td>100</td>
+<td>SHG 时加减速前馈增益标准值</td>
+</tr>
+<tr>
+<td>#13035</td>
+<td>主轴插补轴 bit C</td>
+<td>1</td>
+<td>主轴 SHG 开启（M80）</td>
+</tr>
+<tr>
+<td>#13036</td>
+<td>主轴插补轴 bit 4</td>
+<td>1</td>
+<td>主轴 SHG 开启（M80）</td>
+</tr>
+<tr>
+<td>#2249</td>
+<td>SV049 PGN1sp</td>
+<td>1</td>
+<td>主轴同步控制位置环增益1</td>
+</tr>
+<tr>
+<td>#2250</td>
+<td>SV050 PGN2sp</td>
+<td>8&#x2F;3</td>
+<td>主轴同步控制位置环增益2</td>
+</tr>
+<tr>
+<td>#2258</td>
+<td>SV058 SHGCsp</td>
+<td>6</td>
+<td>主轴 SHG 增益</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>注意：SHG 时速度环必须具有相应响应性，否则加减速照样振动过冲；因机械共振被迫降 VGN 时，需同步减小位置环增益。</p>
+</blockquote>
+<h2 id="四、加减速与滤波器（切削冲击、振纹、轮廓跟随）"><a href="#四、加减速与滤波器（切削冲击、振纹、轮廓跟随）" class="headerlink" title="四、加减速与滤波器（切削冲击、振纹、轮廓跟随）"></a>四、加减速与滤波器（切削冲击、振纹、轮廓跟随）</h2><table>
+<thead>
+<tr>
+<th>参数号</th>
+<th>名称</th>
+<th>标准&#x2F;参考</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>#1206</td>
+<td>G1bF 切削最高速度</td>
+<td>按需</td>
+<td>切削F硬上限，防程序F失控</td>
+</tr>
+<tr>
+<td>#1207</td>
+<td>G1btL 插补前加减速时间</td>
+<td>100ms（50~200）</td>
+<td>M80变更加速度对轨迹误差影响小，可在不振范围内拉高加速度</td>
+</tr>
+<tr>
+<td>#1568</td>
+<td>SfiltG1 G01软加减速滤波</td>
+<td>50ms（20~50）</td>
+<td>抑制振动；对微小圆弧振动无效（用加速度+容差调）</td>
+</tr>
+<tr>
+<td>#1569</td>
+<td>SfiltG0 G00软滤波</td>
+<td>按需</td>
+<td>缩短G0时间用</td>
+</tr>
+<tr>
+<td>#1570</td>
+<td>Sfilt2 第二软滤波</td>
+<td>0~20ms</td>
+<td>有精度要求设0；减小后振动参考”机械振动”处理</td>
+</tr>
+</tbody></table>
+<h2 id="五、SSS-轨迹精度控制（曲面、电极、微小线段核心）"><a href="#五、SSS-轨迹精度控制（曲面、电极、微小线段核心）" class="headerlink" title="五、SSS &#x2F; 轨迹精度控制（曲面、电极、微小线段核心）"></a>五、SSS &#x2F; 轨迹精度控制（曲面、电极、微小线段核心）</h2><blockquote>
+<p>#8022&#x2F;#8023 已核实：转角精度系数标准 -100（范围 -1000~99），曲线精度系数标准 30</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>参数号</th>
+<th>名称</th>
+<th>标准&#x2F;范围</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>#8090</td>
+<td>SSS平滑控制</td>
+<td>0 &#x2F; 1</td>
+<td>主开关；精加工曲面&#x3D;1，重切削钢件&#x3D;0</td>
+</tr>
+<tr>
+<td>#8022</td>
+<td>角精度系数 CORNER COMP</td>
+<td>-100（-1000~99）</td>
+<td>负值越大越保尖角精度、减速；正值保速度</td>
+</tr>
+<tr>
+<td>#8023</td>
+<td>曲线精度系数 CURVE COMP</td>
+<td>30（0~-300）</td>
+<td>圆弧&#x2F;样条平滑；尺寸精度优先用负值</td>
+</tr>
+<tr>
+<td>#8020</td>
+<td>转角减速角 DCC ANGLE</td>
+<td>0~89°</td>
+<td>超过该角度视为拐角并减速；调大节拍快、过切风险高</td>
+</tr>
+<tr>
+<td>#8026</td>
+<td>取消角 CANCEL ANG</td>
+<td>0~180°</td>
+<td>精度控制内角度判定行为</td>
+</tr>
+<tr>
+<td>#8021</td>
+<td>COMP_CHANGE</td>
+<td>0 &#x2F; 1</td>
+<td>0：用通用精度系数(#8019 R COMP)；1：用#8022&#x2F;#8023</td>
+</tr>
+<tr>
+<td>#8037</td>
+<td>转角判断长度 CorJudgeL</td>
+<td>0~99999.999mm</td>
+<td>判定小段是否为拐角的长度范围</td>
+</tr>
+<tr>
+<td>#8029</td>
+<td>Fairing 长度 FairingL</td>
+<td>0~100mm</td>
+<td>光顺处理作用的块长范围</td>
+</tr>
+<tr>
+<td>#8093</td>
+<td>阶差宽度 StepLeng</td>
+<td>-1.0~0.1mm</td>
+<td>加工条件选择时阶差&#x2F;微小几何变化判定宽度</td>
+</tr>
+<tr>
+<td>#2659</td>
+<td>加工条件组容差 tolerance</td>
+<td>0~100mm</td>
+<td>加工条件参数组容差值</td>
+</tr>
+</tbody></table>
+<h2 id="六、M80-加工条件应用包（模具包隐藏功能，三组一键切换）"><a href="#六、M80-加工条件应用包（模具包隐藏功能，三组一键切换）" class="headerlink" title="六、M80 加工条件应用包（模具包隐藏功能，三组一键切换）"></a>六、M80 加工条件应用包（模具包隐藏功能，三组一键切换）</h2><blockquote>
+<p>M80 参数手册提供三组独立加工条件应用包，参数完全同构、编号平移；程序内配合高速高精度 G 代码调用<br>粗加工：Application 1 &#x3D; #42001<del>#42021；半精：Application 2 &#x3D; #42301</del>#42321；精加工：Application 3 &#x3D; #42601~#42621</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>功能</th>
+<th>应用1(粗)</th>
+<th>应用2(半精)</th>
+<th>应用3(精)</th>
+<th>范围</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>G01时间常数</td>
+<td>#42001</td>
+<td>#42301</td>
+<td>#42601</td>
+<td>0~5000ms</td>
+<td>增大更柔和、周期变长</td>
+</tr>
+<tr>
+<td>SfiltG1软滤波</td>
+<td>#42002</td>
+<td>#42302</td>
+<td>#42602</td>
+<td>0~200ms</td>
+<td>增大表面更干净，过大尖角变圆</td>
+</tr>
+<tr>
+<td>Sfilt2第二滤波</td>
+<td>#42003</td>
+<td>#42303</td>
+<td>#42603</td>
+<td>0~50ms</td>
+<td>曲面短段波纹看这个</td>
+</tr>
+<tr>
+<td>通用精度系数</td>
+<td>#42004</td>
+<td>#42304</td>
+<td>#42604</td>
+<td>0~99%</td>
+<td>对应#8019 R COMP</td>
+</tr>
+<tr>
+<td>转角精度 cor_comp</td>
+<td>#42005</td>
+<td>#42305</td>
+<td>#42605</td>
+<td>-1000~99%</td>
+<td>对应#8022</td>
+</tr>
+<tr>
+<td>曲线精度 cur_comp</td>
+<td>#42006</td>
+<td>#42306</td>
+<td>#42606</td>
+<td>-1000~99%</td>
+<td>对应#8023</td>
+</tr>
+<tr>
+<td>前馈增益 fwd_g</td>
+<td>#42007</td>
+<td>#42307</td>
+<td>#42607</td>
+<td>0~200%</td>
+<td>对应#2010</td>
+</tr>
+<tr>
+<td>转角减速角</td>
+<td>#42008</td>
+<td>#42308</td>
+<td>#42608</td>
+<td>0~89°</td>
+<td>对应#8020</td>
+</tr>
+<tr>
+<td>取消角</td>
+<td>#42009</td>
+<td>#42309</td>
+<td>#42609</td>
+<td>0~180°</td>
+<td>对应#8026</td>
+</tr>
+<tr>
+<td>弦误差1(含拐点)</td>
+<td>#42010</td>
+<td>#42310</td>
+<td>#42610</td>
+<td>0~100mm</td>
+<td>小线段轮廓容差，常用0.010</td>
+</tr>
+<tr>
+<td>弦误差2(无拐点)</td>
+<td>#42011</td>
+<td>#42311</td>
+<td>#42611</td>
+<td>0~100mm</td>
+<td>同上</td>
+</tr>
+<tr>
+<td>Fairing选择</td>
+<td>#42013</td>
+<td>#42313</td>
+<td>#42613</td>
+<td>按需</td>
+<td>光顺处理</td>
+</tr>
+<tr>
+<td>转角判断长度</td>
+<td>#42015</td>
+<td>#42315</td>
+<td>#42615</td>
+<td>0~100mm</td>
+<td>对应#8037</td>
+</tr>
+<tr>
+<td>SSS&#x2F;Easy SSS</td>
+<td>#42016</td>
+<td>#42316</td>
+<td>#42616</td>
+<td>0 &#x2F; 1</td>
+<td>每组独立开关</td>
+</tr>
+<tr>
+<td>最大加工速度</td>
+<td>#42020</td>
+<td>#42320</td>
+<td>#42620</td>
+<td>1~1000000</td>
+<td>对应#1206</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>高速高精度控制模式（程序内调用，模具精加工最常用 <strong>G05 P10000</strong>）：</p>
+<ul>
+<li>型式I：G05.1 Q1 &#x2F; Q0</li>
+<li>型式II：G05 P10000 &#x2F; P0（模具精加工主力）</li>
+<li>型式III：G05 P20000 &#x2F; P0<br>前置许可：#8040 High-SpeedAcc &#x3D; 1（最多2个part system可开，3个以上触发Y51 0032报警）；调用前先用低风险测试程序确认选项已安装（未安装会报警”No specification”）</li>
+</ul>
+</blockquote>
+<h2 id="七、主轴与刚性攻丝参数"><a href="#七、主轴与刚性攻丝参数" class="headerlink" title="七、主轴与刚性攻丝参数"></a>七、主轴与刚性攻丝参数</h2><blockquote>
+<p>M80&#x2F;M800 主轴参数为 #13001 段（SP编号）；M70 主轴规格参数在 #3002~#3005 段；以下以 M80 为主</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th>参数号</th>
+<th>代号</th>
+<th>名称</th>
+<th>参考</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>#13001</td>
+<td>SP001 PGV</td>
+<td>主轴位置环增益（非插补）</td>
+<td>按机床</td>
+<td>提高指令追随性、缩短定位整定；过高加减速冲击大</td>
+</tr>
+<tr>
+<td>#3002~#3005</td>
+<td>-</td>
+<td>主轴档位限速（M70）</td>
+<td>按铭牌</td>
+<td>M70主轴最高&#x2F;最低转速限制</td>
+</tr>
+<tr>
+<td>#2249&#x2F;#2250&#x2F;#2258</td>
+<td>-</td>
+<td>主轴同步位置环增益组</td>
+<td>1 : 8&#x2F;3 : 6</td>
+<td>刚性攻丝&#x2F;主轴插补同步核心，配合#13035&#x2F;#13036</td>
+</tr>
+<tr>
+<td>#8012</td>
+<td>-</td>
+<td>G73啄钻每次退刀量</td>
+<td>0.1~2mm</td>
+<td>断屑钻</td>
+</tr>
+<tr>
+<td>#8013</td>
+<td>-</td>
+<td>G83深孔钻退刀量</td>
+<td>2~10mm</td>
+<td>深孔排屑，钢件加大</td>
+</tr>
+</tbody></table>
+<blockquote>
+<p>刚性攻丝乱牙排查顺序：主轴同步增益组(#2249&#x2F;#2250&#x2F;#2258)比例是否正确 → SHG开启位(#13035&#x2F;#13036) → 攻丝加减速 → 主轴编码器。不要盲目降转速掩盖问题。</p>
+</blockquote>
+<h2 id="八、反向间隙与误差补偿（换向台阶、定位精度）"><a href="#八、反向间隙与误差补偿（换向台阶、定位精度）" class="headerlink" title="八、反向间隙与误差补偿（换向台阶、定位精度）"></a>八、反向间隙与误差补偿（换向台阶、定位精度）</h2><table>
+<thead>
+<tr>
+<th>参数号</th>
+<th>名称</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>#2011</td>
+<td>G00快速反向间隙补偿</td>
+<td>定位换向生效</td>
+</tr>
+<tr>
+<td>#2012</td>
+<td>G01切削反向间隙补偿</td>
+<td>轮廓&#x2F;圆弧换向生效；全闭环光栅机型建议设0</td>
+</tr>
+<tr>
+<td>#4001~#4128</td>
+<td>螺距误差补偿数据</td>
+<td>激光干涉仪采集录入，大修&#x2F;换丝杠后重测</td>
+</tr>
+<tr>
+<td>#4201~#4328</td>
+<td>光栅尺误差补偿（全闭环）</td>
+<td>光栅线性误差修正</td>
+</tr>
+<tr>
+<td>#4400</td>
+<td>温度补偿开关</td>
+<td>大型龙门温升热伸长补偿</td>
+</tr>
+<tr>
+<td>#4401</td>
+<td>温度补偿系数</td>
+<td>每℃补偿微米值，X&#x2F;Y&#x2F;Z独立</td>
+</tr>
+</tbody></table>
+<h2 id="九、跟随误差监视（超差停机保护）"><a href="#九、跟随误差监视（超差停机保护）" class="headerlink" title="九、跟随误差监视（超差停机保护）"></a>九、跟随误差监视（超差停机保护）</h2><table>
+<thead>
+<tr>
+<th>参数号</th>
+<th>名称</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>#1330</td>
+<td>跟随误差超差监视有效</td>
+<td>0&#x2F;1开启</td>
+</tr>
+<tr>
+<td>#1331</td>
+<td>跟随误差报警极限值</td>
+<td>超过直接伺服报警停止</td>
+</tr>
+</tbody></table>
+<hr>
+<h2 id="十、分工艺快速设定参考"><a href="#十、分工艺快速设定参考" class="headerlink" title="十、分工艺快速设定参考"></a>十、分工艺快速设定参考</h2><ol>
+<li><strong>通用高精度起步值</strong>：#2203&#x3D;47、#2010&#x3D;45、#1207时间常数100、#1568&#x3D;50、#1570&#x3D;0~20、#8022&#x3D;-100、#8023&#x3D;30</li>
+<li><strong>粗加工（钢料重切削）</strong>：#8090&#x3D;0，PGN&#x2F;fwd_g偏低档(33&#x2F;40)，时间常数偏大(100<del>150)，Sfilt2&#x3D;20</del>30，优先保刚性</li>
+<li><strong>精加工电极&#x2F;曲面（M80）</strong>：#8090&#x3D;1，G05 P10000，fwd_g&#x3D;45，#8022&#x3D;-100<del>-200、#8023&#x3D;0</del>30，Sfilt2&#x3D;0，弦误差≈0.010</li>
+<li><strong>进一步提速</strong>：时间常数降到50、SfiltG1降到20、角精度系数往-300方向</li>
+<li><strong>机械振动时</strong>：先降PGN→33方向、用#1568 SfiltG1抑制（注意对微小圆弧无效）、必要时启用#2243&#x2F;#2244干扰观测器或SHG</li>
+<li><strong>刚性攻丝</strong>：主轴同步增益组按1:8&#x2F;3:6锁定，SHG开启位置1，攻丝加减速专项微调</li>
+</ol>
+<h2 id="十一、安全红线"><a href="#十一、安全红线" class="headerlink" title="十一、安全红线"></a>十一、安全红线</h2><ol>
+<li>修改前必须备份参数并记录三组应用包现值；大量改参数会导致运行不稳，未用位保持0</li>
+<li>伺服增益遵循单变量原则，改完空载试切再批量加工</li>
+<li>干扰观测器、SHG 属伺服驱动层高级选项，部分机型需 NC Configurator2 开启选项才生效；M70 无 SHG&#x2F;OMR&#x2F;加工条件应用包，参数勿跨系统拷贝</li>
+<li>主轴、伺服、安全类参数超出授权范围禁止修改；参数调整不能替代机械维修（丝杠轴承坏、镶条松靠参数治不了）</li>
+</ol>
+</article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta"><i class="fas fa-circle-user fa-fw"></i>文章作者: </span><span class="post-copyright-info"><a href="https://www.daomak.com/">Daomak</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta"><i class="fas fa-square-arrow-up-right fa-fw"></i>文章链接: </span><span class="post-copyright-info"><a href="https://www.daomak.com/posts/Mitsubishi-Processing-Debug.html">https://www.daomak.com/posts/Mitsubishi-Processing-Debug.html</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta"><i class="fas fa-circle-exclamation fa-fw"></i>版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来源 <a href="https://www.Daomak.com" target="_blank">Daomak - Blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E4%B8%89%E8%8F%B1%E7%B3%BB%E7%BB%9F/">三菱系统</a></div><div class="post-share"><div class="social-share" data-image="https://pic1.imgdb.cn/i/034rVxaad0M3ObkFgZsS4i.webp" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><a class="pagination-related full-width" href="/posts/Windows-Code.html" title="Windows 命令"><img class="cover" src="https://pic1.imgdb.cn/i/034qfdBMRRrMM114pgkb6j.webp" onerror="onerror=null;src='/img/404.jpg'" alt="cover of previous post"><div class="info"><div class="info-1"><div class="info-item-1">上一篇</div><div class="info-item-2">Windows 命令</div></div><div class="info-2"><div class="info-item-1">Windows CMD命令提示符分类整理，包含文件目录、网络排查、进程服务、系统修复、磁盘管理等常用命令，附带示例，运维和电脑调试常备速查表</div></div></div></a></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><a class="pagination-related" href="/posts/NERT.html" title="三菱系统传输与修复"><img class="cover" src="https://pic1.imgdb.cn/i/034qgTyzcuLDgCmz6ywuHb.webp" alt="cover"><div class="info text-center"><div class="info-1"><div class="info-item-1"><i class="far fa-calendar-alt fa-fw"></i> 2024-03-18</div><div class="info-item-2">三菱系统传输与修复</div></div><div class="info-2"><div class="info-item-1">三菱M70/M80原厂NC Explorer软件完整联网部署教程，机床与软件、报错排查，配套NERT修复工具使用说明</div></div></div></a></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info text-center"><div class="avatar-img"><img src="/img/favicon.png" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info-name">Daomak</div><div class="author-info-description">攒下沿途所得，留予同路人参考</div><div class="site-data"><a href="/archives/"><div class="headline">文章</div><div class="length-num">6</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">4</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">2</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://github.com/Daomak"><i class="fab fa-github"></i><span>Github</span></a></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E4%B8%89%E8%8F%B1M70-M80-M800-%E5%8A%A0%E5%B7%A5%E8%B0%83%E8%AF%95%E5%8F%82%E6%95%B0%E5%AE%8C%E6%95%B4%E6%89%8B%E5%86%8C"><span class="toc-number">1.</span> <span class="toc-text">三菱M70&#x2F;M80&#x2F;M800 加工调试参数完整手册</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%80%E3%80%81%E4%BC%BA%E6%9C%8D%E7%8E%AF%E5%9F%BA%E7%A1%80%E5%8F%82%E6%95%B0%EF%BC%88%E6%8C%AF%E5%8A%A8%E3%80%81%E5%9C%86%E5%BA%A6%E3%80%81%E8%B7%9F%E9%9A%8F%E8%AF%AF%E5%B7%AE%E6%A0%B8%E5%BF%83%EF%BC%8C%E5%8D%95%E8%BD%B4%E7%8B%AC%E7%AB%8B%EF%BC%89"><span class="toc-number">1.1.</span> <span class="toc-text">一、伺服环基础参数（振动、圆度、跟随误差核心，单轴独立）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%8C%E3%80%81%E5%B9%B2%E6%89%B0%E8%A7%82%E6%B5%8B%E5%99%A8-%E6%89%B0%E5%8A%A8%E8%A1%A5%E5%81%BF"><span class="toc-number">1.2.</span> <span class="toc-text">二、干扰观测器 &#x2F; 扰动补偿</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%89%E3%80%81SHG-%E5%B9%B3%E6%BB%91%E9%AB%98%E5%A2%9E%E7%9B%8A%E6%8E%A7%E5%88%B6%EF%BC%88M80-M800-%E5%8A%9F%E8%83%BD%EF%BC%89"><span class="toc-number">1.3.</span> <span class="toc-text">三、SHG 平滑高增益控制（M80&#x2F;M800 功能）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%9B%9B%E3%80%81%E5%8A%A0%E5%87%8F%E9%80%9F%E4%B8%8E%E6%BB%A4%E6%B3%A2%E5%99%A8%EF%BC%88%E5%88%87%E5%89%8A%E5%86%B2%E5%87%BB%E3%80%81%E6%8C%AF%E7%BA%B9%E3%80%81%E8%BD%AE%E5%BB%93%E8%B7%9F%E9%9A%8F%EF%BC%89"><span class="toc-number">1.4.</span> <span class="toc-text">四、加减速与滤波器（切削冲击、振纹、轮廓跟随）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BA%94%E3%80%81SSS-%E8%BD%A8%E8%BF%B9%E7%B2%BE%E5%BA%A6%E6%8E%A7%E5%88%B6%EF%BC%88%E6%9B%B2%E9%9D%A2%E3%80%81%E7%94%B5%E6%9E%81%E3%80%81%E5%BE%AE%E5%B0%8F%E7%BA%BF%E6%AE%B5%E6%A0%B8%E5%BF%83%EF%BC%89"><span class="toc-number">1.5.</span> <span class="toc-text">五、SSS &#x2F; 轨迹精度控制（曲面、电极、微小线段核心）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AD%E3%80%81M80-%E5%8A%A0%E5%B7%A5%E6%9D%A1%E4%BB%B6%E5%BA%94%E7%94%A8%E5%8C%85%EF%BC%88%E6%A8%A1%E5%85%B7%E5%8C%85%E9%9A%90%E8%97%8F%E5%8A%9F%E8%83%BD%EF%BC%8C%E4%B8%89%E7%BB%84%E4%B8%80%E9%94%AE%E5%88%87%E6%8D%A2%EF%BC%89"><span class="toc-number">1.6.</span> <span class="toc-text">六、M80 加工条件应用包（模具包隐藏功能，三组一键切换）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%83%E3%80%81%E4%B8%BB%E8%BD%B4%E4%B8%8E%E5%88%9A%E6%80%A7%E6%94%BB%E4%B8%9D%E5%8F%82%E6%95%B0"><span class="toc-number">1.7.</span> <span class="toc-text">七、主轴与刚性攻丝参数</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%85%AB%E3%80%81%E5%8F%8D%E5%90%91%E9%97%B4%E9%9A%99%E4%B8%8E%E8%AF%AF%E5%B7%AE%E8%A1%A5%E5%81%BF%EF%BC%88%E6%8D%A2%E5%90%91%E5%8F%B0%E9%98%B6%E3%80%81%E5%AE%9A%E4%BD%8D%E7%B2%BE%E5%BA%A6%EF%BC%89"><span class="toc-number">1.8.</span> <span class="toc-text">八、反向间隙与误差补偿（换向台阶、定位精度）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B9%9D%E3%80%81%E8%B7%9F%E9%9A%8F%E8%AF%AF%E5%B7%AE%E7%9B%91%E8%A7%86%EF%BC%88%E8%B6%85%E5%B7%AE%E5%81%9C%E6%9C%BA%E4%BF%9D%E6%8A%A4%EF%BC%89"><span class="toc-number">1.9.</span> <span class="toc-text">九、跟随误差监视（超差停机保护）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8D%81%E3%80%81%E5%88%86%E5%B7%A5%E8%89%BA%E5%BF%AB%E9%80%9F%E8%AE%BE%E5%AE%9A%E5%8F%82%E8%80%83"><span class="toc-number">1.10.</span> <span class="toc-text">十、分工艺快速设定参考</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8D%81%E4%B8%80%E3%80%81%E5%AE%89%E5%85%A8%E7%BA%A2%E7%BA%BF"><span class="toc-number">1.11.</span> <span class="toc-text">十一、安全红线</span></a></li></ol></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item"><a class="thumbnail" href="/posts/Mitsubishi-Processing-Debug.html" title="Mitsubishi-processing-debug"><img src="https://pic1.imgdb.cn/i/034rVxaad0M3ObkFgZsS4i.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Mitsubishi-processing-debug"/></a><div class="content"><a class="title" href="/posts/Mitsubishi-Processing-Debug.html" title="Mitsubishi-processing-debug">Mitsubishi-processing-debug</a><time datetime="2026-11-04T02:51:04.000Z" title="发表于 2026-11-04 10:51:04">2026-11-04</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/Windows-Code.html" title="Windows 命令"><img src="https://pic1.imgdb.cn/i/034qfdBMRRrMM114pgkb6j.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Windows 命令"/></a><div class="content"><a class="title" href="/posts/Windows-Code.html" title="Windows 命令">Windows 命令</a><time datetime="2026-05-02T15:17:23.000Z" title="发表于 2026-05-02 23:17:23">2026-05-02</time></div></div><div class="aside-list-item"><a class="thumbnail" href="/posts/Windows-Deploy.html" title="Windows 安装与优化"><img src="https://pic1.imgdb.cn/i/034qfGb0oJPrLOQ284LPHN.webp" onerror="this.onerror=null;this.src='/img/404.jpg'" alt="Windows 安装与优化"/></a><div class="content"><a class="title" href="/posts/Windows-Deploy.html" title="Windows 安装与优化">Windows 安装与优化</a><time datetime="2026-02-02T15:02:44.000Z" title="发表于 2026-02-02 23:02:44">2026-02-02</time></div></div></div></div></div></div></main><footer id="footer"><div id="footer-wrap"><div class="copyright">&copy;2019 - 2026 By Daomak</div><div class="footer_custom_text"><span id="runTime"></span><script>let st=new Date("2019/01/01 00:00:00").getTime();function f(n){return n<10?"0"+n:n;}setInterval(function(){let t=Date.now()-st;let d=Math.floor(t/86400000);let h=Math.floor((t%86400000)/3600000);let m=Math.floor((t%3600000)/60000);let s=Math.floor((t%60000)/1000);document.getElementById("runTime").innerText="本网站已运行 "+d+"天"+h+"小时"+f(m)+"分"+f(s)+"秒";},1000);</script></div></div></footer></div><div id="rightside"><div id="rightside-config-hide"><button id="readmode" type="button" title="阅读模式"><i class="fas fa-book-open"></i></button><button id="translateLink" type="button" title="简繁转换">繁</button><button id="darkmode" type="button" title="日间和夜间模式切换"><i class="fas fa-adjust"></i></button><button id="hide-aside-btn" type="button" title="单栏和双栏切换"><i class="fas fa-arrows-alt-h"></i></button></div><div id="rightside-config-show"><button id="rightside-config" type="button" title="设置"><i class="fas fa-cog fa-spin"></i></button><button class="close" id="mobile-toc-button" type="button" title="目录"><i class="fas fa-list-ul"></i></button><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="/js/tw_cn.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.umd.min.js"></script><div class="js-pjax"></div><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div id="local-search"><div class="search-dialog"><nav class="search-nav"><span class="search-dialog-title">搜索</span><span id="loading-status"></span><button class="search-close-button"><i class="fas fa-times"></i></button></nav><div class="text-center" id="loading-database"><i class="fas fa-spinner fa-pulse"></i><span>  数据加载中</span></div><div class="search-wrap"><div id="local-search-input"><div class="local-search-box"><input class="local-search-box--input" placeholder="搜索文章" type="text"/></div></div><hr/><div id="local-search-results"></div><div id="local-search-stats-wrap"></div></div></div><div id="search-mask"></div><script src="/js/search/local-search.js"></script></div></div></body></html>
